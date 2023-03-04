@@ -2,14 +2,19 @@ package main
 
 import (
 	"fmt"
+	"sync"
 )
 
+var mu sync.Mutex
+
 func main() {
-	fmt.Println()
 
 	c := make(chan int) 
 
 	arr := [5]int {2, 4, 6, 8, 10}
+
+	mu.Lock()
+	defer mu.Unlock()
 
 	go number(c, arr)
 
@@ -21,8 +26,6 @@ func main() {
             fmt.Println(num, ok)
         }
     }
-
-	fmt.Println()
 }
 
 func number (c chan int, arr [5]int) {
