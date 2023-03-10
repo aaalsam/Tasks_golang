@@ -12,7 +12,8 @@ func main() {
 	array := [5]int {2, 4, 6, 8, 10}
 	
 	for _, i := range array {
-		mu.Lock()
+		
+		
 		go numberSquared(i)
 	}
 
