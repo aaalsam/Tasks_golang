@@ -11,7 +11,7 @@ import (
 //По истечению N секунд программа должна завершиться.
 //N нужно ввести из консоли.
 
-func main() {
+func writesAndReading() {
 	var n int //Завели переменную для сканера
 
 	fmt.Println("Введите N:")
@@ -29,6 +29,7 @@ func main() {
 	go reading(ctx, ch, wg)
 
 	time.Sleep(1 * time.Millisecond)
+
 	wg.Wait()
 }
 
@@ -38,8 +39,10 @@ func writes(ctx context.Context, ch chan string, wg *sync.WaitGroup) {
 	for {
 		select { // Оператор select позволяет go-процедуре находиться в ожидании нескольких операций передачи данных.
 		case <-ctx.Done(): // Проверяем не завершился ли контекст
-			return // Если тру, то выходим из кейса
-		case ch <- "message":
+			wg.Done()
+			fmt.Println("Завершено")
+			return // Если тру, то выходим из функции
+		case ch <- "message": //Если мы можем писать 
 			fmt.Println("Мы записали в канал")
 		}
 	}
@@ -47,10 +50,12 @@ func writes(ctx context.Context, ch chan string, wg *sync.WaitGroup) {
 
 // Функция read(писать) бесконечно читает из канала
 func reading(ctx context.Context, ch chan string, wg *sync.WaitGroup) {
+	wg.Add(1)
 	for {
-		wg.Add(1)
 		select {
 		case <-ctx.Done():
+			wg.Done()
+			fmt.Println("Программа завершена")
 			return
 		case <-ch:
 			fmt.Println("Мы прочитали из канала")
