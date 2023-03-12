@@ -1,35 +1,66 @@
 package main
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"sync"
+)
 
-//Реализовать запись данных в map
+//Реализовать конкурентную запись данных в map
+
+type Value struct { // Представляем новую структуру, которая предоставляет собственный мьютек
+	sync.RWMutex
+	map1 map[int]int
+}
 
 func main() {
-	
-	map1 := map[int]string {
-		1: "Nastya",
-		2: "Dasha",
-		3: "Sasha",
+
+	val := &Value{ // Создаем объект структуры
+		map1: map[int]int{},
 	}
-	map1[4] = "Pobert"
-	map1[5] = "Vasya"
-	map1[6] = "Petya"
 
-	iterationMap(map1)
-
-	fmt.Println("")
-
-	delete(map1, 2)
-
-	iterationMap(map1)
-
-
-	fmt.Println("\n",map1[3])
+	writeAndReadeMap(val)
 
 }
 
-func iterationMap(map0 map[int]string) {
-	for key, value := range map0 {
-		fmt.Println(key, value)
+func writeAndReadeMap(val *Value) {
+	wg := sync.WaitGroup{}
+
+	for i := 0; i < 5; i++ {
+		wg.Add(1) // Добавляем в группу
+		go func(i int) {
+			defer wg.Done()
+			val.Add(i) // Добавляем значение i в мапу
+		}(i)
 	}
+
+	for i := 0; i < 5; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			num, err := val.Get(i)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Println(num)
+			}
+		}(i)
+	}
+
+	wg.Wait()
+}
+
+func (val *Value) Add (num int) {
+	val.Lock()
+	defer val.Unlock()
+	val.map1[num] = num
+}
+
+func (val *Value) Get (num int) (int, error) {
+	val.RLock()
+	defer val.RUnlock()
+	if number, ok := val.map1[num]; ok {
+		return number, nil
+	}
+	return 0, errors.New("number does not exists")
 }
