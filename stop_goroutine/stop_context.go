@@ -6,11 +6,13 @@ import (
 	"time"
 )
 
+// defer - откладывает выполнение какого-либо действия
+// cancel (WifhTimeOut) - если прошло время, но контекст не отменился, потому что произошла ошибка (вызывается в defer)
+// cancel (WithCancel) - в определенный момент вызываем cancel
+
 func stopContext() {
 
 	ctx, cancel := context.WithCancel(context.Background()) // Контекст с отменой
-
-	defer cancel() // Отмена контекста
 
 	ch := make(chan int)
 
@@ -18,7 +20,9 @@ func stopContext() {
 
 	ch <- 1
 
-	time.Sleep(1 * time.Millisecond) // Либо со слипом, либо с группой
+	cancel() // Отмена контекста
+
+	time.Sleep(5 * time.Second) // Либо со слипом, либо с группой
 
 }
 
@@ -27,7 +31,8 @@ func function4(ch chan int, ctx context.Context) {
 		select {
 		case a := <-ch:
 			fmt.Println(a)
-		case <-ctx.Done(): // Закрытие канала от имени контекста
+		case <-ctx.Done(): // Закрытие канала от имени контекст
+			fmt.Println("мы тут")
 			return
 		}
 	}

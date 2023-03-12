@@ -2,28 +2,31 @@ package main
 
 import (
 	"fmt"
+	"time"
 )
 
-func stopQuit(){
+// принято создавать канал пустых структур
 
-	quit := make(chan bool) // Пустой доп. канал
+func stopQuit() {
 
-	ch := make(chan int)
+	quit := make(chan int)
 
-	go function2(ch, quit)
+	go function2(quit)
 
-	ch <- 1
+	quit <- 1 // Говорим, что он тру, при этом выполняется кейс
+	//close(quit)
 
-	quit <- true // Говорим, что он тру, при этом выполняется кейс
+	time.Sleep(1 * time.Second)
 }
 
-func function2(ch chan int, quit chan bool) {
+func function2(quit chan int) {
 	for {
 		select {
 		case <-quit:
+			fmt.Println("мы тут")
 			return
-		case a := <-ch:
-			fmt.Println(a)
+		default:
+			fmt.Println("0")
 		}
 	}
 }
