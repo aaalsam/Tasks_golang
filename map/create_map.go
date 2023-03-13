@@ -8,29 +8,29 @@ import (
 
 //Реализовать конкурентную запись данных в map
 
-type Value struct { // Представляем новую структуру, которая предоставляет собственный мьютек
+type Storage struct { // Представляем новую структуру, которая предоставляет собственный мьютек
 	sync.RWMutex
 	map1 map[int]int
 }
 
 func main() {
 
-	val := &Value{ // Создаем объект структуры
+	val := &Storage{ // Создаем объект структуры
 		map1: map[int]int{},
 	}
 
-	writeAndReadeMap(val)
+	writeAndReadMap(val)
 
 }
 
-func writeAndReadeMap(val *Value) {
-	wg := sync.WaitGroup{}
+func writeAndReadMap(val *Storage) {
+	wg := new(sync.WaitGroup)
 
 	for i := 0; i < 5; i++ {
 		wg.Add(1) // Добавляем в группу
 		go func(i int) {
-			defer wg.Done()
-			val.Add(i) // Добавляем значение i в мапу
+			defer wg.Done() // По завершению функции, то есть после return
+			val.Set(i)      // Добавляем значение i в мапу
 		}(i)
 	}
 
@@ -41,26 +41,26 @@ func writeAndReadeMap(val *Value) {
 			num, err := val.Get(i)
 			if err != nil {
 				fmt.Println(err)
-			} else {
-				fmt.Println(num)
+				return
 			}
+			fmt.Println(num)
 		}(i)
 	}
 
 	wg.Wait()
 }
 
-func (val *Value) Add (num int) {
-	val.Lock()
-	defer val.Unlock()
-	val.map1[num] = num
+func (s *Storage) Set(num int) {
+	s.Lock()
+	defer s.Unlock()
+	s.map1[num] = num
 }
 
-func (val *Value) Get (num int) (int, error) {
+func (val *Storage) Get(num int) (int, error) {
 	val.RLock()
 	defer val.RUnlock()
 	if number, ok := val.map1[num]; ok {
 		return number, nil
 	}
-	return 0, errors.New("number does not exists")
+	return 0, errors.New("number does not exist")
 }
